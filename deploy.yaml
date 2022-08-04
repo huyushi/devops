@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: pipeline
+  labels:
+    app: pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pipeline
+  template:
+    metadata:
+      labels:
+        app: pipeline
+    spec:
+      containers:
+        - name: pipeline
+          image: 139.196.102.187:80/repo/flexiv_ccs_cloud:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  labels:
+    app: pipeline
+  name: pipeline
+spec:
+  selector:
+    app: pipeline
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: default
+  name: pipeline
+spec:
+  ingressClassName: ingress
+  rules:
+    - host: devops.pipeline.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pipeline
+                port:
+                  number: 8000
